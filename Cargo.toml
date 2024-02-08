@@ -1,0 +1,20 @@
+[package]
+name = "web-template-rs"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = ["crates/*"]
+
+[dependencies]
+# entity = { path = "crates/entity" }
+migration = { path = "crates/migration" }
+tokio = { version = "1", features = ["full"] }
+tracing = { version = "*" }
+tracing-subscriber = { version = "*" }
+axum = { version = "*" }
+sea-orm = { version = "1.0.0-rc.1", features = [
+    "sqlx-sqlite",
+    "runtime-tokio-native-tls",
+    "macros",
+] }
