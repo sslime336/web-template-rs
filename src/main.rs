@@ -1,38 +1,30 @@
-mod entity;
 mod api;
-mod service;
+mod db;
+mod entity;
 mod router;
+mod service;
+
+use std::env;
 
 use anyhow::Ok;
 use dotenvy::dotenv;
-use entity::prelude::*;
-use sea_orm::{ActiveModelTrait, ActiveValue, ConnectOptions, Database, EntityTrait};
-use std::env;
-use tracing::info;
-
-use crate::entity::user;
+use router::router;
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().expect("`.env` file not found");
-    env::set_var("RUST_LOG", "DEBUG");
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(EnvFilter::from_default_env())
+        .init();
 
-    let database_url = env::var("DATABASE_URL")?;
-    let connect_option = ConnectOptions::new(database_url).to_owned();
-    let conn = Database::connect(connect_option).await.unwrap();
-    info!("connection: {:?}", conn);
-
-    let p = user::ActiveModel {
-        id: ActiveValue::default(),
-        username: ActiveValue::Set("Jack".to_owned()),
-        password: ActiveValue::Set("123456".to_owned()),
-        phone: ActiveValue::Set(Some("12345678910".to_owned())),
-    };
-    p.insert(&conn).await?;
-
-    let query_res = User::find_by_id(1).one(&conn).await?;
-    info!("{:?}", query_res.unwrap());
+    let host = env::var("HOST")?;
+    let port = env::var("PORT")?;
+    let server_url = format!("{host}:{port}");
+    let app = router();
+    let listener = tokio::net::TcpListener::bind(&server_url).await.unwrap();
+    axum::serve(listener, app).await?;
 
     Ok(())
 }
