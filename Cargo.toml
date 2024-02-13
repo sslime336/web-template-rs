@@ -7,7 +7,6 @@ edition = "2021"
 members = ["migration"]
 
 [dependencies]
-# entity = { path = "entity" }
 migration = { path = "migration" }
 tokio = { version = "1", features = ["full"] }
 tracing = { version = "*" }
